@@ -381,7 +381,7 @@ function toggleAxyresPanel() {
         document.body.innerText.slice(0, 8000);
 
       const res = await fetch(
-        "http://localhost:5000/extract",
+        "https://axyres-chrome-extension.onrender.com/extract",
         {
           method: "POST",
           headers: {
