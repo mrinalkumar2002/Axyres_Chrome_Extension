@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Axyres - Job Scraper</title>
+
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <!-- Header -->
+        <div class="header">
+        <div class="logo">
+            <img src="logo.jpeg" alt="Axyres Logo" class="logo-img">
+            <span>Axyres</span>
+        </div>
+            <div class="status-badge">
+                <i class="fas fa-circle"></i>
+                <a href="#">Sign in</a>
+            </div>
+        </div>
+
+        <!-- No Job Section -->
+        <div class="no-job" id="noJob">
+
+            <h2 class="nojob-title">Supercharge your job applications ⚡</h2>
+            <p class="nojob-sub">
+                Axyres turns any job posting into a tailored, ATS-friendly resume.
+            </p>
+
+            <!-- Open Job -->
+            <div class="nojob-card" id="openJobCard">
+                <div class="card-icon"><i class="fas fa-briefcase"></i></div>
+                <div class="card-text">
+                    <h4>Open a Job Posting</h4>
+                    <p>LinkedIn, Indeed or career page</p>
+                </div>
+            </div>
+
+            <!-- Scrape Card -->
+            <div class="nojob-card scrape-card" id="scrapeBtn">
+                <div class="card-icon"><i class="fas fa-bolt"></i></div>
+                <div class="card-text">
+                    <h4>Scrape with AI</h4>
+                    <p>Extract job details instantly</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Output -->
+        <div id="output"></div>
+
+    </div>
+
+    <script src="popup.js"></script>
+
+</body>
+
+</html>

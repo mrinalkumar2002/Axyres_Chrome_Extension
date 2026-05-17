@@ -1,0 +1,104 @@
+{
+  "manifest_version": 3,
+  "name": "Axyres AI Job Scraper",
+  "version": "3.0",
+  "description": "AI-powered job scraper",
+
+  "permissions": ["activeTab", "scripting"],
+
+  "host_permissions": [
+    "https://www.linkedin.com/*",
+    "https://*.indeed.com/*",
+    "https://*.greenhouse.io/*",
+    "https://*.lever.co/*",
+    "https://*.naukri.com/*",
+    "https://*.foundit.in/*",
+    "https://*.monster.com/*",
+    "https://*.glassdoor.com/*",
+    "https://*.wellfound.com/*",
+    "https://*.workdayjobs.com/*",
+    "https://*.smartrecruiters.com/*",
+    "https://*.ziprecruiter.com/*",
+    "https://*.dice.com/*",
+    "https://*.angel.co/*",
+    "https://*.internshala.com/*",
+    "https://*.hirist.tech/*",
+    "https://*.cutshort.io/*",
+    "https://*.timesjobs.com/*",
+    "https://*.shine.com/*",
+    "https://*.freshersworld.com/*",
+    "https://*.careerbuilder.com/*",
+    "https://*.jobrapido.com/*",
+    "https://*.simplyhired.com/*"
+  ],
+
+  "action": {
+    "default_popup": "popup.html"
+  },
+
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.linkedin.com/*",
+        "https://*.indeed.com/viewjob*",
+        "https://*.greenhouse.io/*",
+        "https://*.lever.co/*",
+        "https://*.naukri.com/*",
+        "https://*.foundit.in/*",
+        "https://*.monster.com/*",
+        "https://*.glassdoor.com/*",
+        "https://*.wellfound.com/*",
+        "https://*.workdayjobs.com/*",
+        "https://*.smartrecruiters.com/*",
+        "https://*.ziprecruiter.com/*",
+        "https://*.dice.com/*",
+        "https://*.angel.co/*",
+        "https://*.internshala.com/*",
+        "https://*.hirist.tech/*",
+        "https://*.cutshort.io/*",
+        "https://*.timesjobs.com/*",
+        "https://*.shine.com/*",
+        "https://*.freshersworld.com/*",
+        "https://*.careerbuilder.com/*",
+        "https://*.jobrapido.com/*",
+        "https://*.simplyhired.com/*"
+      ],
+      "js": ["content.js"]
+    }
+  ],
+
+  "background": {
+    "service_worker": "background.js"
+  },
+
+  "web_accessible_resources": [
+    {
+      "resources": ["logo.jpeg"],
+      "matches": [
+        "https://www.linkedin.com/*",
+        "https://*.indeed.com/*",
+        "https://*.greenhouse.io/*",
+        "https://*.lever.co/*",
+        "https://*.naukri.com/*",
+        "https://*.foundit.in/*",
+        "https://*.monster.com/*",
+        "https://*.glassdoor.com/*",
+        "https://*.wellfound.com/*",
+        "https://*.workdayjobs.com/*",
+        "https://*.smartrecruiters.com/*",
+        "https://*.ziprecruiter.com/*",
+        "https://*.dice.com/*",
+        "https://*.angel.co/*",
+        "https://*.internshala.com/*",
+        "https://*.hirist.tech/*",
+        "https://*.cutshort.io/*",
+        "https://*.timesjobs.com/*",
+        "https://*.shine.com/*",
+        "https://*.freshersworld.com/*",
+        "https://*.careerbuilder.com/*",
+        "https://*.jobrapido.com/*",
+        "https://*.simplyhired.com/*"
+      ]
+    }
+  ]
+}
