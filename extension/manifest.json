@@ -1,12 +1,34 @@
 {
   "manifest_version": 3,
   "name": "Axyres AI Job Scraper",
-  "version": "3.0",
-  "description": "AI-powered job scraper",
+  "version": "3.1.0",
+  "description": "AI-powered job scraper and resume tailoring assistant.",
 
-  "permissions": ["activeTab", "scripting"],
+  "icons": {
+    "16": "logo.jpeg",
+    "32": "logo.jpeg",
+    "48": "logo.jpeg",
+    "128": "logo.jpeg"
+  },
+
+  "action": {
+    "default_title": "Axyres AI Job Scraper"
+  },
+
+  "permissions": [
+    "activeTab",
+    "storage",
+    "downloads",
+    "tabs",
+    "scripting",
+    "sidePanel"
+  ],
 
   "host_permissions": [
+    "http://localhost:4000/*",
+    "http://localhost:5001/*",
+    "http://localhost:5173/*",
+
     "https://www.linkedin.com/*",
     "https://*.indeed.com/*",
     "https://*.greenhouse.io/*",
@@ -32,8 +54,11 @@
     "https://*.simplyhired.com/*"
   ],
 
-  "action": {
-    "default_popup": "popup.html"
+  "background": {
+    "service_worker": "background.js"
+  },
+  "side_panel": {
+    "default_path": "sidepanel.html"
   },
 
   "content_scripts": [
@@ -63,42 +88,19 @@
         "https://*.jobrapido.com/*",
         "https://*.simplyhired.com/*"
       ],
-      "js": ["content.js"]
+      "js": ["content/content.js"],
+      "run_at": "document_idle"
     }
   ],
 
-  "background": {
-    "service_worker": "background.js"
+  "externally_connectable": {
+    "matches": ["http://localhost:5173/*"]
   },
 
   "web_accessible_resources": [
     {
-      "resources": ["logo.jpeg"],
-      "matches": [
-        "https://www.linkedin.com/*",
-        "https://*.indeed.com/*",
-        "https://*.greenhouse.io/*",
-        "https://*.lever.co/*",
-        "https://*.naukri.com/*",
-        "https://*.foundit.in/*",
-        "https://*.monster.com/*",
-        "https://*.glassdoor.com/*",
-        "https://*.wellfound.com/*",
-        "https://*.workdayjobs.com/*",
-        "https://*.smartrecruiters.com/*",
-        "https://*.ziprecruiter.com/*",
-        "https://*.dice.com/*",
-        "https://*.angel.co/*",
-        "https://*.internshala.com/*",
-        "https://*.hirist.tech/*",
-        "https://*.cutshort.io/*",
-        "https://*.timesjobs.com/*",
-        "https://*.shine.com/*",
-        "https://*.freshersworld.com/*",
-        "https://*.careerbuilder.com/*",
-        "https://*.jobrapido.com/*",
-        "https://*.simplyhired.com/*"
-      ]
+      "resources": ["logo.jpeg", "review.html"],
+      "matches": ["<all_urls>"]
     }
   ]
 }
