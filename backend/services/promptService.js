@@ -118,8 +118,8 @@ Additionally, extract or format the candidate's full name from the provided Pers
 
 RULES:
 1. Adapt the summary to highlight the most relevant skills for the Job Description.
-2. Inject relevant ATS keywords from the JD naturally, BUT ONLY if they align with the candidate's actual background.
-3. DO NOT fabricate experience, change the candidate's profession, or invent unrelated gig/freelance work. Maintain truthfulness.
+2. Inject critical ATS keywords from the JD naturally to ensure a high match score.
+3. Adapt the candidate's professional identity to match the target job title and industry, emphasizing transferable skills.
 4. The summary MUST be exactly 3 sentences long. Ensure it is concise, impactful, and reads like a cohesive paragraph.
 5. Ensure the name is properly capitalized (e.g., John Doe). If missing, try to infer from email.
 6. Return ONLY structured JSON without markdown formatting.
@@ -152,10 +152,10 @@ Rewrite a single Work Experience entry to highlight transferable skills and alig
 RULES:
 1. NEVER SUMMARIZE as a paragraph. The responsibilities MUST be an array of strings.
 2. Generate EXACTLY 2 concise bullet points for the responsibilities. Do not generate more than 2 points.
-3. Adapt the responsibilities to emphasize aspects that match the Job Description, but DO NOT change the core nature of the job.
-4. Frame the existing responsibilities clearly. DO NOT invent completely new tasks if the candidate was doing something else. Maintain professional truthfulness.
-5. Highlight relevant technologies used from the candidate's original entry.
-6. Only add ATS keywords if they genuinely fit the candidate's original responsibilities.
+3. Aggressively adapt the responsibilities to align with the Job Description. Highlight transferable skills and use exact keywords from the JD.
+4. Frame the existing work in the context of the new job requirements to maximize ATS compatibility.
+5. Highlight relevant technologies and skills that match the JD.
+6. Inject important ATS keywords seamlessly into the bullet points.
 7. Return ONLY structured JSON without markdown formatting.
 
 RETURN ONLY THIS JSON FORMAT:
@@ -209,9 +209,10 @@ You are an expert ATS Resume Writer.
 Reorder and refine the candidate's Technical Skills array to prioritize the skills most relevant to the Structured Job Requirements.
 
 RULES:
-1. Reorder the existing skills so that skills matching the JD appear first.
-2. DO NOT completely replace the candidate's skills with the JD's skills. Only add JD skills if they are highly related to the candidate's existing skill profile. Maintain honesty regarding the candidate's actual abilities.
-3. Keep the list concise and relevant.
+1. Extract the most important Hard Skills, Tools, and Keywords from the Structured Job Requirements.
+2. Add these critical JD keywords to the candidate's skills list to ensure a high ATS match score.
+3. Keep the candidate's original relevant skills, but prioritize and place the new JD-specific skills at the very beginning of the array.
+4. The final array should be a clean list of strings (e.g. ["Data Entry", "Python", "Communication"]).
 
 RETURN ONLY THIS JSON FORMAT:
 {
