@@ -60,43 +60,59 @@ function buildHTML(resume) {
 <style>
 /* Basic resets and standard fonts missing from frontend CSS */
 * { box-sizing: border-box; }
+html { font-size: 14px !important; } /* Base font size increased so it looks full ('bhara bhara') */
 body { font-family: 'Inter', 'Segoe UI', 'Helvetica', 'Arial', sans-serif; background: #fff; margin: 0; padding: 0; }
 
 ${globalCSS}
 
 /* Aggressive tight spacing for 1-page PDF fit */
 @media print {
-  .print-resume { width: 100% !important; padding: 15px !important; margin: 0 !important; }
+  .print-resume { width: 100% !important; padding: 0 !important; margin: 0 !important; }
   
-  .template-classic, .template-professional, .template-timeline-container, .resume-scroll-wrapper {
-    padding: 0 !important; margin: 0 !important; border: none !important; box-shadow: none !important;
+  /* Ensure templates span full height of A4 so sidebar backgrounds don't stop halfway */
+  html, body { height: 100% !important; margin: 0 !important; padding: 0 !important; }
+  
+  .template-classic, .template-classic-container, .template-timeline-container {
+    padding: 55px 65px !important; /* Standard A4 Margins: ~0.7 inch L/R, ~0.6 inch T/B */
+    box-sizing: border-box;
   }
   
-  /* Reduce Margins */
+  .template-classic, .template-professional, .template-timeline-container {
+    min-height: 1122px !important; /* A4 height */
+    max-width: none !important;
+    width: 100% !important;
+    margin: 0 !important;
+  }
+  
+  .template-professional .resume-body {
+    min-height: 1000px !important; /* Ensures the sidebar stretches down */
+  }
+
+  /* ATS Spacing standards */
   .section, .classic-section, .timeline-section, .resume-body > aside, .resume-body > main {
-    margin-bottom: 8px !important;
+    margin-bottom: 16px !important;
   }
   .experience-item, .project-item, .education-item, .cert-item, .timeline-item {
-    margin-bottom: 6px !important;
+    margin-bottom: 12px !important;
     padding: 0 !important;
     page-break-inside: avoid;
   }
   
-  /* Tighter headings */
-  h1.name { font-size: 22px !important; margin-bottom: 2px !important; }
-  p.title { font-size: 14px !important; margin-bottom: 4px !important; }
+  /* Professional heading spacing */
+  h1.name { font-size: 26px !important; margin-bottom: 4px !important; }
+  p.title { font-size: 16px !important; margin-bottom: 8px !important; }
   .section-title { 
-    font-size: 13px !important; 
-    margin-top: 6px !important; 
-    margin-bottom: 6px !important; 
-    padding-bottom: 2px !important; 
+    font-size: 15px !important; 
+    margin-top: 10px !important; 
+    margin-bottom: 10px !important; 
+    padding-bottom: 4px !important; 
   }
   
-  /* Tighter text */
+  /* Improved text line height */
   p, li, .summary-text, .exp-description, .project-description, .item-description {
-    margin-bottom: 2px !important;
-    line-height: 1.3 !important;
-    font-size: 11px !important;
+    margin-bottom: 4px !important;
+    line-height: 1.4 !important;
+    font-size: 12px !important;
   }
   
   /* Tighter grids / lists */
@@ -158,16 +174,31 @@ export async function generateResumePDF(resume) {
             timeout: 10000
         });
 
+        // Strictly fit content to 1 page using CSS zoom to avoid Puppeteer scale artifacts
+        await page.evaluate(() => {
+            const el = document.querySelector('.print-resume') || document.body;
+            const contentHeight = el.scrollHeight;
+            const targetHeight = 1122; // A4 printable height (approx)
+
+            if (contentHeight > targetHeight) {
+                // Calculate the scale required to fit the height exactly on 1 page
+                // CSS zoom scales the content while keeping the layout width at 100% of the page
+                const scale = targetHeight / contentHeight;
+                document.body.style.zoom = scale;
+            }
+        });
+
         console.log("[PDF] Printing to PDF...");
         await page.pdf({
             path: filePath,
             format: "A4",
             printBackground: true,
+            scale: 1,
             margin: {
-                top: "20px",
-                bottom: "20px",
-                left: "20px",
-                right: "20px"
+                top: "0px",
+                bottom: "0px",
+                left: "0px",
+                right: "0px"
             },
             timeout: 15000
         });

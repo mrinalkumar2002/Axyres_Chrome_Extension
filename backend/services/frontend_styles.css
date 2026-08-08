@@ -2876,7 +2876,7 @@ hr {
   font-family: 'Georgia', 'Times New Roman', serif; /* Classic elegant corporate serif typography */
   min-height: 297mm;
   background: #ffffff;
-  padding: 40px;
+  padding: 55px 65px;
   color: #222222;
   line-height: 1.5;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
@@ -2916,9 +2916,8 @@ hr {
   font-family: 'Inter', sans-serif;
 }
 
-/* Section Splitting Layout Rows */
 .template-classic-container .classic-section {
-  margin-bottom: 24px;
+  margin-bottom: 30px;
 }
 
 .template-classic-container .section-title {
@@ -3061,7 +3060,8 @@ hr {
   }
   .template-classic-container {
     box-shadow: none;
-    padding: 0;
+    padding: 55px 65px;
+    box-sizing: border-box;
     margin: 0;
     width: 100%;
   }
@@ -3072,7 +3072,7 @@ hr {
   font-family: 'Georgia', 'Times New Roman', serif;
   margin: 0 auto;
   background: white;
-  padding: 40px;
+  padding: 55px 65px;
   color: #2c3e50;
   line-height: 1.6;
   box-shadow: 0 5px 30px rgba(0, 0, 0, 0.08);
@@ -3326,7 +3326,8 @@ hr {
   .template-classic {
     box-shadow: none;
     border: none;
-    padding: 20px;
+    padding: 55px 65px;
+    box-sizing: border-box;
   }
   
   .template-classic .page-break {
@@ -3348,7 +3349,7 @@ hr {
   font-family: 'Inter', -apple-system, sans-serif;
   min-height: 297mm;
   background: #ffffff;
-  padding: 60px;
+  padding: 55px 65px;
   color: #222222;
   line-height: 1.5;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
@@ -3588,7 +3589,8 @@ hr {
   }
   .template-timeline-container {
     box-shadow: none;
-    padding: 0;
+    padding: 55px 65px;
+    box-sizing: border-box;
     margin: 0;
     width: 100%;
   }
@@ -3608,7 +3610,7 @@ hr {
 .template-professional .resume-header {
   background: #1a365d;
   color: white;
-  padding: 40px;
+  padding: 55px 65px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -3658,18 +3660,18 @@ hr {
 
 .template-professional .resume-body {
   display: grid;
-  grid-template-columns: 250px 1fr;
+  grid-template-columns: 280px 1fr;
   min-height: 1000px;
 }
 
 .template-professional .sidebar {
   background: #f7fafc;
-  padding: 30px;
+  padding: 55px 20px 55px 65px;
   border-right: 1px solid #e2e8f0;
 }
 
 .template-professional .main-content {
-  padding: 30px;
+  padding: 55px 65px 55px 30px;
 }
 
 .template-professional .section {
