@@ -12,7 +12,7 @@ export function buildTemplate1(data) {
         
         <!-- HEADER SECTION -->
         <header class="classic-header">
-          <h1 class="name">${data.personalInfo?.name || "YOUR NAME"}</h1>
+          <h1 class="name">${data.personalInfo?.name || (data.personalInfo?.firstName ? (data.personalInfo.firstName + " " + (data.personalInfo.lastName || "")).trim() : "") || "YOUR NAME"}</h1>
           <p class="title">${data.personalInfo?.title || ""}</p>
           <div class="contact-info">
             ${data.personalInfo?.phone ? `<span class="contact-item">• ${data.personalInfo.phone}</span>` : ""}
@@ -130,7 +130,7 @@ export function buildTemplate1(data) {
 }
 
 export function buildTemplate2(data) {
-  const getFullName = () => data.personalInfo?.name || "John Doe";
+  const getFullName = () => data.personalInfo?.name || (data.personalInfo?.firstName ? (data.personalInfo.firstName + " " + (data.personalInfo.lastName || "")).trim() : "") || "John Doe";
   const hasSkills = (data.technicalSkills || data.skills || [])?.some(skill => skill && skill.trim());
   const hasLanguages = data.languages?.some(lang => lang && lang.trim());
   const hasExperience = (data.workExperience || data.experience || [])?.length > 0;
@@ -277,7 +277,7 @@ export function buildTemplate3(data) {
         
         <!-- HEADER SECTION -->
         <header class="timeline-header">
-          <h1 class="name">${data.personalInfo?.name || "YOUR NAME"}</h1>
+          <h1 class="name">${data.personalInfo?.name || (data.personalInfo?.firstName ? (data.personalInfo.firstName + " " + (data.personalInfo.lastName || "")).trim() : "") || "YOUR NAME"}</h1>
           <p class="title">${data.personalInfo?.title || ""}</p>
           
           <div class="contact-info">
@@ -403,7 +403,7 @@ export function buildTemplate3(data) {
 }
 
 export function buildTemplate4(data) {
-  const getFullName = () => data.personalInfo?.name || "John Doe";
+  const getFullName = () => data.personalInfo?.name || (data.personalInfo?.firstName ? (data.personalInfo.firstName + " " + (data.personalInfo.lastName || "")).trim() : "") || "John Doe";
   const hasSkills = (data.technicalSkills || data.skills || [])?.some(skill => skill && skill.trim());
   const hasLanguages = data.languages?.some(lang => lang && lang.trim());
   const hasExperience = (data.workExperience || data.experience || [])?.length > 0;

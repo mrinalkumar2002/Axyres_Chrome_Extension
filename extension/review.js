@@ -40,7 +40,7 @@ document.addEventListener(
         container.innerHTML = `
         <div class="resume-preview">
             
-            <h1>${resume.personalInfo?.name || ""}</h1>
+            <h1>${resume.personalInfo?.name || (resume.personalInfo?.firstName ? (resume.personalInfo.firstName + " " + (resume.personalInfo.lastName || "")).trim() : "") || "YOUR NAME"}</h1>
             
             <div class="contact-info">
                 ${resume.personalInfo?.email ? `<span>${resume.personalInfo.email}</span>` : ""}

@@ -124,7 +124,7 @@ export async function tailorResume(resume, job) {
         ...resume,
         personalInfo: {
             ...(resume.personalInfo || {}),
-            name: tailored.name || resume.personalInfo?.name || resume.name || "",
+            name: tailored.name || resume.personalInfo?.name || (resume.personalInfo?.firstName ? (resume.personalInfo.firstName + " " + (resume.personalInfo.lastName || "")).trim() : "") || resume.name || "",
             email: resume.personalInfo?.email || resume.email || "",
             phone: resume.personalInfo?.phone || resume.phone || "",
             location: resume.personalInfo?.location || resume.location || "",
