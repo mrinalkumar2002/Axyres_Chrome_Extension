@@ -62,6 +62,8 @@ app.get("/health", (req, res) => {
    Routes
 ====================================================== */
 
+app.use("/generated", express.static("generated"));
+
 app.use("/api/extract", extractRoutes);
 
 app.use("/api/tailor", tailorRoutes);

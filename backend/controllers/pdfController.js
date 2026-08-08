@@ -36,23 +36,12 @@ export const pdfController = async (req, res) => {
         const pdf = await generateResumePDF(resume);
 
         return res.status(200).json({
-
             success: true,
-
             message: "PDF generated successfully.",
-
             data: {
-
-      data: {
-
-    filename: pdf.filename,
-
-    pdfUrl: pdf.downloadUrl,
-
-    filePath: pdf.filePath
-
-}
-
+                filename: pdf.filename,
+                pdfUrl: `http://localhost:5001${pdf.downloadUrl}`,
+                filePath: pdf.filePath
             }
 
         });

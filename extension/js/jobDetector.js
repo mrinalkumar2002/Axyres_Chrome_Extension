@@ -69,7 +69,9 @@ function isJobPage(url) {
         /linkedin\.com\/jobs\/search/i,
 
         // Indeed
-        /indeed\..*\/viewjob/i,
+        /indeed\..+\/viewjob/i,
+        /indeed\..+[?&]vjk=/i,
+        /indeed\..+[?&]jk=/i,
 
         // Naukri
         /naukri\.com\/job-listings/i,
@@ -113,13 +115,18 @@ function isJobPage(url) {
 
         // TimesJobs
         /timesjobs\.com/i,
-
         // Shine
         /shine\.com/i,
-
         // FreshersWorld
-        /freshersworld\.com/i
-
+        /freshersworld\.com/i,
+        // SuccessFactors
+        /successfactors\.com/i,
+        // Oracle Careers
+        /oraclecloud\.com/i,
+        // Ashby
+        /ashbyhq\.com/i,
+        // Internshala
+        /internshala\.com/i
     ];
 
     return patterns.some(pattern => pattern.test(url));

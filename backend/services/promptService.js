@@ -75,102 +75,155 @@ ${job.text || ""}
 /**
  * Resume Tailoring Prompt
  */
-export function getTailorPrompt(resume, job) {
-
+export function getJDAnalysisPrompt(job) {
 return `
-
-You are an expert ATS Resume Writer.
-
-Your task is to tailor an existing resume for a specific job description.
-
-Follow these rules strictly.
-
-
-IMPORTANT:
-
-DO NOT change:
-
-- Name
-- Email
-- Phone
-- LinkedIn
-- GitHub
-- Address
-- Education
-- Certifications
-- Languages
-
-
-You MUST improve:
-
-1. Professional Summary
-2. Technical Skills
-3. Work Experience bullets
-4. Project descriptions
-
+You are an expert technical recruiter and ATS specialist.
+Analyze the following raw Job Description and extract a structured JSON representation of the role requirements.
 
 RULES:
-
-- Match keywords from the job description.
-- Improve ATS score.
-- Keep experience truthful.
-- Never invent companies.
-- Never add fake projects.
-- Never create fake achievements.
-- Use only information available in the resume.
-
+1. Extract the exact job title and seniority level.
+2. Separate required skills from preferred skills.
+3. List core technologies and ATS keywords.
+4. Summarize the main responsibilities.
+5. Identify soft skills, industry, and domain.
+6. Return ONLY valid JSON.
 
 RETURN ONLY THIS JSON FORMAT:
-
 {
- "personalInfo": {},
- "summary": "",
- "technicalSkills": [],
- "workExperience": [
-    {
-      "company": "",
-      "role": "",
-      "responsibilities": [],
-      "achievements": []
-    }
- ],
- "projects": [
-    {
-      "name": "",
-      "description": "",
-      "technologies": []
-    }
- ],
- "education": [],
- "certifications": [],
- "languages": []
+  "job_title": "",
+  "seniority": "",
+  "required_skills": [],
+  "preferred_skills": [],
+  "technologies": [],
+  "ats_keywords": [],
+  "responsibilities": [],
+  "soft_skills": [],
+  "industry": "",
+  "domain": "",
+  "role_type": ""
 }
 
-
-ORIGINAL RESUME:
-
-${JSON.stringify(resume,null,2)}
-
-
-
-JOB DESCRIPTION:
-
-${JSON.stringify({
-
-title: job.title || "",
-
-company: job.company || "",
-
-skills: job.skills || [],
-
-description:
-job.description?.substring(0,3000) || ""
-
-},null,2)}
-
-
+RAW JOB DESCRIPTION:
+${job.title || ""}
+${job.company || ""}
+${job.description || job.text || ""}
 `;
+}
 
+export function getSummaryPrompt(summary, structuredJD, personalInfo) {
+return `
+You are an expert ATS Resume Writer.
+Rewrite the candidate's Professional Summary to perfectly align with the provided Structured Job Requirements.
+Additionally, extract or format the candidate's full name from the provided Personal Info.
+
+RULES:
+1. Adapt the summary to highlight the most relevant skills for the Job Description.
+2. Inject relevant ATS keywords from the JD naturally, BUT ONLY if they align with the candidate's actual background.
+3. DO NOT fabricate experience, change the candidate's profession, or invent unrelated gig/freelance work. Maintain truthfulness.
+4. The summary MUST be exactly 3 sentences long. Ensure it is concise, impactful, and reads like a cohesive paragraph.
+5. Ensure the name is properly capitalized (e.g., John Doe). If missing, try to infer from email.
+6. Return ONLY structured JSON without markdown formatting.
+3. The summary MUST be exactly 3 sentences long. Ensure it is concise, impactful, and reads like a cohesive paragraph.
+4. Ensure the name is properly capitalized (e.g., John Doe). If missing, try to infer from email.
+5. Return ONLY structured JSON without markdown formatting.
+
+RETURN ONLY THIS JSON FORMAT:
+{
+  "name": "",
+  "professional_summary": ""
+}
+
+ORIGINAL SUMMARY:
+${summary}
+
+PERSONAL INFO:
+${JSON.stringify(personalInfo, null, 2)}
+
+STRUCTURED JOB REQUIREMENTS:
+${JSON.stringify(structuredJD, null, 2)}
+`;
+}
+
+export function getExperiencePrompt(experienceObj, structuredJD) {
+return `
+You are an expert ATS Resume Writer.
+Rewrite a single Work Experience entry to highlight transferable skills and align with the Structured Job Requirements.
+
+RULES:
+1. NEVER SUMMARIZE as a paragraph. The responsibilities MUST be an array of strings.
+2. Generate EXACTLY 2 concise bullet points for the responsibilities. Do not generate more than 2 points.
+3. Adapt the responsibilities to emphasize aspects that match the Job Description, but DO NOT change the core nature of the job.
+4. Frame the existing responsibilities clearly. DO NOT invent completely new tasks if the candidate was doing something else. Maintain professional truthfulness.
+5. Highlight relevant technologies used from the candidate's original entry.
+6. Only add ATS keywords if they genuinely fit the candidate's original responsibilities.
+7. Return ONLY structured JSON without markdown formatting.
+
+RETURN ONLY THIS JSON FORMAT:
+{
+  "company": "",
+  "role": "",
+  "duration": "",
+  "responsibilities": [],
+  "achievements": [],
+  "technologies": []
+}
+
+ORIGINAL WORK EXPERIENCE:
+${JSON.stringify(experienceObj)}
+
+STRUCTURED JOB REQUIREMENTS:
+${JSON.stringify(structuredJD, null, 2)}
+`;
+}
+
+export function getProjectPrompt(projectObj, structuredJD) {
+return `
+You are an expert ATS Resume Writer.
+Rewrite a single Project entry to align with the Structured Job Requirements.
+
+RULES:
+1. Rewrite the project description to highlight aspects that match the Job Description, without inventing non-existent projects or roles.
+2. Inject ATS keywords seamlessly if they apply to the real project work.
+3. The description MUST be an array of exactly 2 concise bullet points.
+4. Maintain the core project name and technologies. DO NOT fabricate skills the candidate does not have.
+5. Return ONLY structured JSON without markdown formatting.
+
+RETURN ONLY THIS JSON FORMAT:
+{
+  "title": "",
+  "description": [],
+  "technologies": []
+}
+
+ORIGINAL PROJECT ENTRY:
+${JSON.stringify(projectObj, null, 2)}
+
+STRUCTURED JOB REQUIREMENTS:
+${JSON.stringify(structuredJD, null, 2)}
+`;
+}
+
+export function getSkillsPrompt(skillsArray, structuredJD) {
+return `
+You are an expert ATS Resume Writer.
+Reorder and refine the candidate's Technical Skills array to prioritize the skills most relevant to the Structured Job Requirements.
+
+RULES:
+1. Reorder the existing skills so that skills matching the JD appear first.
+2. DO NOT completely replace the candidate's skills with the JD's skills. Only add JD skills if they are highly related to the candidate's existing skill profile. Maintain honesty regarding the candidate's actual abilities.
+3. Keep the list concise and relevant.
+
+RETURN ONLY THIS JSON FORMAT:
+{
+  "skills": []
+}
+
+ORIGINAL SKILLS:
+${JSON.stringify(skillsArray)}
+
+STRUCTURED JOB REQUIREMENTS:
+${JSON.stringify(structuredJD, null, 2)}
+`;
 }
 /**
  * ATS Analysis Prompt

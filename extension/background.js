@@ -22,11 +22,29 @@ chrome.runtime.onInstalled.addListener(() => {
 
 
 chrome.runtime.onStartup.addListener(() => {
+    console.log("Axyres Extension Started");
+});
 
-    console.log(
-        "Axyres Extension Started"
-    );
+function broadcastPageChanged(tabId) {
+    chrome.runtime.sendMessage({ action: "PAGE_CHANGED", tabId }).catch(() => {});
+}
 
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+    if (changeInfo.status === 'complete' || changeInfo.url) {
+        broadcastPageChanged(tabId);
+    }
+});
+
+chrome.tabs.onActivated.addListener((activeInfo) => {
+    broadcastPageChanged(activeInfo.tabId);
+});
+
+chrome.windows.onFocusChanged.addListener((windowId) => {
+    if (windowId !== chrome.windows.WINDOW_ID_NONE) {
+        chrome.tabs.query({ active: true, windowId: windowId }, (tabs) => {
+            if (tabs.length > 0) broadcastPageChanged(tabs[0].id);
+        });
+    }
 });
 
 

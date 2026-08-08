@@ -196,6 +196,13 @@ const ExtensionApi = (() => {
 
     }
 
+    function saveLatest(payload) {
+        return post(
+            `${CONFIG.WEBSITE_API}/api/resume/save-latest`,
+            payload
+        );
+    }
+
     function extensionToken() {
 
         return get(
@@ -291,6 +298,8 @@ const ExtensionApi = (() => {
         status,
 
         latestResume,
+        
+        saveLatest,
 
         extensionToken,
 

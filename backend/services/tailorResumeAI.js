@@ -1,303 +1,193 @@
 import { groqChat, parseJson } from "./groqClient.js";
-import { getTailorPrompt } from "./promptService.js";
+import { getSummaryPrompt, getExperiencePrompt, getProjectPrompt, getSkillsPrompt, getJDAnalysisPrompt } from "./promptService.js";
 
 /**
- * Tailor Resume using AI
+ * Tailor Resume using AI (Section-Level Pipeline)
  *
  * @param {Object} resume Original Resume JSON
  * @param {Object} job Extracted Job JSON
  * @returns {Object} Tailored Resume
  */
-
-
+// Helper to prevent hitting Groq rate limits
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 export async function tailorResume(resume, job) {
-
     if (!resume || typeof resume !== "object") {
         throw new Error("Resume data is required.");
     }
-
     if (!job || typeof job !== "object") {
         throw new Error("Job data is required.");
     }
 
-    const prompt = getTailorPrompt(resume, job);
+    console.log("=========================================");
+    console.log("STARTING SECTION-LEVEL TAILORING PIPELINE");
+    console.log("=========================================");
 
-    const messages = [
-        {
-            role: "system",
-            content: `
-You are an expert ATS Resume Writer.
-
-Tailor the resume according to the provided job description.
-
-STRICT RULES:
-
-1. Keep unchanged:
-- Name
-- Email
-- Phone
-- LinkedIn
-- GitHub
-- Address
-- Education
-- Certifications
-- Languages
-
-
-2. Rewrite:
-- Professional Summary based on job description
-- Technical Skills matching JD keywords
-- Project descriptions with relevant technologies
-- Work experience bullets with impact
-
-3. Never invent:
-- Companies
-- Job titles
-- Years of experience
-- False employment history
-
-4. Convert existing work experience into professional ATS bullet points.
-
-5. For internships and previous roles:
-- Rewrite the existing work into responsibilities.
-- Convert technical tasks into ATS-friendly bullet points.
-- Create achievements only from actual contributions.
-
-6. Do not create:
-- Fake metrics
-- Fake awards
-- Fake promotions
-- Fake business impact
-
-7. If original resume has limited details:
-- Expand wording using the same meaning.
-- Do not leave responsibilities and achievements empty.
-
-
-8. Use existing experience only.
-
-9. Never remove existing resume information.
-
-10. If you cannot improve a section,
-return the original content.
-
-11. Preserve:
-- Work experience
-- Responsibilities
-- Achievements
-- Project details
-- Education details
-
-12. Only rewrite wording for ATS optimization.
-
-13. Return ONLY JSON.
-
-Required format:
-
-{
- "personalInfo": {},
- "summary": {
-    "headline":"",
-    "description":""
- },
- "technicalSkills": [],
- "workExperience": [
-    {
-      "company":"",
-      "role":"",
-      "responsibilities":[],
-      "achievements":[]
+    // Step 0: Analyze Job Description
+    let structuredJD = job;
+    try {
+        console.log("[Pipeline] Analyzing Job Description...");
+        const jdPrompt = getJDAnalysisPrompt(job);
+        const jdResponse = await groqChat([{ role: "system", content: "You are an expert technical recruiter. Return ONLY JSON." }, { role: "user", content: jdPrompt }]);
+        structuredJD = parseJson(jdResponse);
+        console.log("[Pipeline] Structured JD successfully generated.");
+        await sleep(8000); // Wait to clear TPM buffer
+    } catch (e) {
+        console.error("[Pipeline Error] JD Analyzer failed, falling back to raw job description:", e.message);
+        structuredJD = {
+            title: job.title || "",
+            company: job.company || "",
+            skills: job.skills || [],
+            description: job.description?.substring(0,2000) || job.text?.substring(0,2000) || ""
+        };
     }
- ],
- "projects":[
-    {
-      "name":"",
-      "description":"",
-      "technologies":[]
-    }
- ],
- "education":[],
- "certifications":[],
- "languages":[]
-}
-`
 
-        },
-        {
-            role: "user",
-            content: prompt
+    const tailored = {
+        name: resume.personalInfo?.name || resume.name || "",
+        summary: resume.summary,
+        experience: resume.workExperience || resume.experience || [],
+        projects: resume.projects || [],
+        skills: resume.technicalSkills || resume.skills || []
+    };
+
+    // 1. Rewrite Summary & Extract Name
+    try {
+        console.log("[Pipeline] Tailoring Professional Summary...");
+        const prompt = getSummaryPrompt(resume.summary || resume.professionalSummary || "", structuredJD, resume.personalInfo || {});
+        const response = await groqChat([{ role: "system", content: "You are an expert ATS Resume Writer. Return ONLY JSON." }, { role: "user", content: prompt }]);
+        const result = parseJson(response);
+        if (result.professional_summary) {
+            tailored.summary = result.professional_summary;
         }
-    ];
+        if (result.name) {
+            tailored.name = result.name;
+        }
+        await sleep(8000); // Wait to clear TPM buffer
+    } catch (e) {
+        console.error("[Pipeline Error] Failed to tailor summary:", e.message);
+    }
 
-    const response = await groqChat(messages);
-const tailoredResume = parseJson(response);
+    // 2. Rewrite Work Experience sequentially
+    console.log(`[Pipeline] Tailoring ${tailored.experience.length} Work Experience entries...`);
+    const newExperience = [];
+    for (let i = 0; i < tailored.experience.length; i++) {
+        try {
+            console.log(`[Pipeline] Tailoring Experience ${i + 1}/${tailored.experience.length}...`);
+            const prompt = getExperiencePrompt(tailored.experience[i], structuredJD);
+            const response = await groqChat([{ role: "system", content: "You are an expert ATS Resume Writer. Return ONLY JSON." }, { role: "user", content: prompt }]);
+            newExperience.push(parseJson(response));
+            await sleep(8000); // Wait to clear TPM buffer
+        } catch (e) {
+            console.error(`[Pipeline Error] Failed to tailor experience ${i + 1}:`, e.message);
+            newExperience.push(tailored.experience[i]); // fallback
+        }
+    }
+    tailored.experience = newExperience;
 
+    // 3. Rewrite Projects sequentially
+    console.log(`[Pipeline] Tailoring ${tailored.projects.length} Projects...`);
+    const newProjects = [];
+    for (let i = 0; i < tailored.projects.length; i++) {
+        try {
+            console.log(`[Pipeline] Tailoring Project ${i + 1}/${tailored.projects.length}...`);
+            const prompt = getProjectPrompt(tailored.projects[i], structuredJD);
+            const response = await groqChat([{ role: "system", content: "You are an expert ATS Resume Writer. Return ONLY JSON." }, { role: "user", content: prompt }]);
+            newProjects.push(parseJson(response));
+            if (i < tailored.projects.length - 1) await sleep(8000); // Wait to clear TPM buffer
+        } catch (e) {
+            console.error(`[Pipeline Error] Failed to tailor project ${i + 1}:`, e.message);
+            newProjects.push(tailored.projects[i]); // fallback
+        }
+    }
+    tailored.projects = newProjects;
 
-return validateResume({
+    // 4. Reorder Skills
+    try {
+        await sleep(8000); // Ensure buffer is clear before final call
+        console.log("[Pipeline] Reordering Technical Skills...");
+        const prompt = getSkillsPrompt(tailored.skills, structuredJD);
+        const response = await groqChat([{ role: "system", content: "You are an expert ATS Resume Writer. Return ONLY JSON." }, { role: "user", content: prompt }]);
+        const result = parseJson(response);
+        if (result.skills && Array.isArray(result.skills)) {
+            tailored.skills = result.skills;
+        }
+    } catch (e) {
+        console.error("[Pipeline Error] Failed to reorder skills:", e.message);
+    }
 
-    ...resume,
+    console.log("=========================================");
+    console.log("SECTION-LEVEL TAILORING PIPELINE COMPLETE");
+    console.log("=========================================");
 
-    ...tailoredResume,
-
-
-    personalInfo:
-        resume.personalInfo,
-
-
-    education:
-        resume.education,
-
-
-    certifications:
-        resume.certifications,
-
-
-    languages:
-        resume.languages,
-
-
-    workExperience:
-        mergeExperience(
-            resume.workExperience,
-            tailoredResume.workExperience
-        ),
-
-
-    projects:
-        mergeProjects(
-            resume.projects,
-            tailoredResume.projects
-        )
-
-});
+    // Validate and Merge final structure
+    return validateResume({
+        ...resume,
+        personalInfo: {
+            ...(resume.personalInfo || {}),
+            name: tailored.name || resume.personalInfo?.name || resume.name || "",
+            email: resume.personalInfo?.email || resume.email || "",
+            phone: resume.personalInfo?.phone || resume.phone || "",
+            location: resume.personalInfo?.location || resume.location || "",
+            linkedin: resume.personalInfo?.linkedin || resume.linkedin || "",
+            github: resume.personalInfo?.github || resume.github || ""
+        },
+        summary: tailored.summary,
+        technicalSkills: tailored.skills,
+        experience: mergeExperience(resume.workExperience || resume.experience || [], tailored.experience),
+        projects: mergeProjects(resume.projects || [], tailored.projects),
+        education: resume.education || [],
+        certifications: resume.certifications || [],
+        languages: resume.languages || []
+    });
 }
 
 function mergeProjects(original = [], updated = []) {
-
-
-    const source =
-        updated.length
-            ? updated
-            : original;
-
-
-    return source.map((item,index)=>{
-
-
-        const old =
-            original[index] || {};
-
-
-        const aiItem =
-            updated[index] || {};
-
-
-
+    const source = updated.length ? updated : original;
+    return source.map((item, index) => {
+        const old = original[index] || {};
+        const aiItem = updated[index] || {};
         return {
-
             ...old,
-
             ...item,
-
-
-            technologies:
-
-                aiItem.technologies?.length
-
-                    ? aiItem.technologies
-
-                    :
-
-                    old.technologies || []
-
+            name: aiItem.title || aiItem.name || old.name || old.title || "",
+            description: (Array.isArray(aiItem.description) && aiItem.description.length > 0) 
+                         ? aiItem.description 
+                         : (aiItem.description || old.description || []),
+            technologies: aiItem.technologies?.length ? aiItem.technologies : old.technologies || []
         };
-
-
     });
-
 }
 
+function mergeExperience(original = [], updated = []) {
+    const source = updated.length ? updated : original;
+    return source.map((item, index) => {
+        const old = original[index] || {};
+        const aiItem = updated[index] || {};
+        return {
+            ...old,
+            ...item,
+            company: aiItem.company || old.company || "",
+            position: aiItem.role || aiItem.position || old.position || old.role || "",
+            duration: aiItem.duration || old.duration || "",
+            responsibilities: aiItem.responsibilities?.length ? aiItem.responsibilities : old.responsibilities || [],
+            achievements: aiItem.achievements?.length ? aiItem.achievements : old.achievements || [],
+            technologies: aiItem.technologies?.length ? aiItem.technologies : old.technologies || []
+        };
+    });
+}
 
-/**
- * Ensure required sections exist.
- */
 function validateResume(resume) {
-
-
     return {
-
-        personalInfo:
-            resume.personalInfo || {},
-
-
-       summary:
-
-    typeof resume.summary === "string"
-
-        ? resume.summary
-
-        :
-
-    resume.summary?.description ||
-
-    resume.professionalSummary ||
-
-    "Full Stack Developer experienced in building scalable web applications using modern frontend and backend technologies.",
-
-        technicalSkills:
-
-            Array.isArray(resume.technicalSkills) &&
-            resume.technicalSkills.length
-                ? resume.technicalSkills
-                :
-            Array.isArray(resume.skills)
-                ? resume.skills
-                :
-            [],
-
-
-
-        workExperience:
-
-            Array.isArray(resume.workExperience)
-                ? resume.workExperience
-                :
-            Array.isArray(resume.experience)
-                ? resume.experience
-                :
-            [],
-
-
-
-        projects:
-
-            Array.isArray(resume.projects)
-                ? resume.projects
-                :
-            [],
-
-
-
-        education:
-
-            resume.education || [],
-
-
-        certifications:
-
-            resume.certifications || [],
-
-
-        languages:
-
-            resume.languages || [],
-
-
-        achievements:
-
-            resume.achievements || []
-
+        personalInfo: resume.personalInfo || {},
+        summary: typeof resume.summary === "string" 
+            ? resume.summary 
+            : resume.summary?.description || resume.professionalSummary || "Professional capable of building robust solutions.",
+        technicalSkills: Array.isArray(resume.technicalSkills) && resume.technicalSkills.length ? resume.technicalSkills : Array.isArray(resume.skills) ? resume.skills : [],
+        workExperience: Array.isArray(resume.workExperience) ? resume.workExperience : Array.isArray(resume.experience) ? resume.experience : [],
+        projects: Array.isArray(resume.projects) ? resume.projects : [],
+        education: resume.education || [],
+        certifications: resume.certifications || [],
+        languages: resume.languages || [],
+        achievements: resume.achievements || []
     };
-
 }

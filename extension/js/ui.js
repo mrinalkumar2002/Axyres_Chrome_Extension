@@ -320,7 +320,7 @@ if (elements.downloadBtn) {
     // LOADER
     // ==================================================
 
-    function showLoader(text = "Please wait...") {
+    function showLoader(text = "Please wait...", subtext = "This may take up to a minute") {
 
         if (!elements.loader) return;
 
@@ -332,6 +332,15 @@ if (elements.downloadBtn) {
         if (loaderText) {
 
             loaderText.textContent = text;
+
+        }
+
+        const loaderSubtext =
+            elements.loader.querySelector(".loader-subtext");
+
+        if (loaderSubtext) {
+
+            loaderSubtext.textContent = subtext;
 
         }
 
@@ -444,68 +453,117 @@ if (elements.downloadBtn) {
     }
 
     // ==================================================
-    // NOTIFICATION
+    // GLOBAL TOAST NOTIFICATION SYSTEM
     // ==================================================
 
-    function showNotification(
-        message,
-        type = "info"
-    ) {
+    const toastQueue = [];
+    let activeToasts = 0;
+    const MAX_TOASTS = 3;
 
-        if (!elements.notification) return;
-
-        show(elements.notification);
-
-        if (elements.notificationText) {
-
-            elements.notificationText.textContent =
-                message;
-
+    function processToastQueue() {
+        if (toastQueue.length === 0 || activeToasts >= MAX_TOASTS) {
+            return;
         }
 
-        if (!elements.notificationIcon) return;
+        const container = document.getElementById("toast-container");
+        if (!container) return;
 
-        const icon =
-            elements.notificationIcon.querySelector("i");
+        const { message, type, id } = toastQueue.shift();
+        activeToasts++;
 
-        if (!icon) return;
+        const toast = document.createElement("div");
+        toast.className = `toast toast-${type}`;
+        toast.id = id;
 
-        switch (type) {
+        let iconClass = "fas fa-circle-info";
+        if (type === "success") iconClass = "fas fa-check-circle";
+        if (type === "error") iconClass = "fas fa-times-circle";
+        if (type === "warning") iconClass = "fas fa-exclamation-triangle";
 
-            case "success":
+        toast.innerHTML = `
+            <div class="toast-icon">
+                <i class="${iconClass}"></i>
+            </div>
+            <div class="toast-content">
+                <div class="toast-message">${message}</div>
+            </div>
+            <button class="toast-close"><i class="fas fa-times"></i></button>
+        `;
 
-                icon.className =
-                    "fas fa-circle-check";
+        container.appendChild(toast);
 
-                break;
+        let timeoutId;
 
-            case "warning":
+        const removeToast = () => {
+            if (toast.classList.contains("toast-hiding")) return;
+            toast.classList.add("toast-hiding");
+            clearTimeout(timeoutId);
+            
+            toast.addEventListener("animationend", () => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+                activeToasts--;
+                processToastQueue();
+            }, { once: true });
+        };
 
-                icon.className =
-                    "fas fa-triangle-exclamation";
+        toast.querySelector(".toast-close").addEventListener("click", removeToast);
+        
+        // Auto dismiss after 3.5 seconds
+        timeoutId = setTimeout(removeToast, 3500);
 
-                break;
+        // Save reference to timeout on the element to reset it if duplicate arrives
+        toast.dataset.timeoutId = timeoutId;
+    }
 
-            case "error":
+    function showNotification(message, type = "info") {
+        const container = document.getElementById("toast-container");
+        
+        // Check for duplicate visible toasts
+        if (container) {
+            const existingToasts = Array.from(container.querySelectorAll(".toast"));
+            const duplicate = existingToasts.find(t => t.querySelector(".toast-message").textContent === message);
+            
+            if (duplicate) {
+                // Reset timer for duplicate toast
+                clearTimeout(parseInt(duplicate.dataset.timeoutId));
+                
+                // Add a subtle bump animation to indicate it was triggered again
+                duplicate.style.transform = "scale(1.05)";
+                setTimeout(() => duplicate.style.transform = "", 150);
 
-                icon.className =
-                    "fas fa-circle-xmark";
+                const removeToast = () => {
+                    if (duplicate.classList.contains("toast-hiding")) return;
+                    duplicate.classList.add("toast-hiding");
+                    duplicate.addEventListener("animationend", () => {
+                        if (duplicate.parentNode) duplicate.parentNode.removeChild(duplicate);
+                        activeToasts--;
+                        processToastQueue();
+                    }, { once: true });
+                };
 
-                break;
-
-            default:
-
-                icon.className =
-                    "fas fa-circle-info";
-
+                duplicate.dataset.timeoutId = setTimeout(removeToast, 3500);
+                return;
+            }
         }
 
+        // Check for duplicates in queue
+        if (toastQueue.some(t => t.message === message)) {
+            return;
+        }
+
+        toastQueue.push({ message, type, id: 'toast-' + Date.now() });
+        processToastQueue();
     }
 
     function hideNotification() {
-
-        hide(elements.notification);
-
+        const container = document.getElementById("toast-container");
+        if (container) {
+            container.innerHTML = "";
+        }
+        toastQueue.length = 0;
+        activeToasts = 0;
     }
 
     // ==================================================

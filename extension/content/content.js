@@ -186,15 +186,7 @@ console.log(
             job = scrapeGlassdoor();
 
         } else {
-
-            return {
-
-                success: false,
-
-                error: "Unsupported website."
-
-            };
-
+            job = scrapeGeneric();
         }
 
         return {
@@ -206,6 +198,24 @@ console.log(
         };
 
     }
+
+    // ==========================================
+// Generic Fallback Scraper
+// ==========================================
+function scrapeGeneric() {
+    return {
+        title: document.title || "Unknown Title",
+        company: window.location.hostname.replace('www.', ''),
+        location: "",
+        description: document.body.innerText.substring(0, 15000),
+        employmentType: "",
+        experience: "",
+        workplaceType: "",
+        salary: "",
+        skills: [],
+        source: window.location.hostname
+    };
+}
 
     // ==========================================
     // LinkedIn
@@ -414,7 +424,13 @@ function scrapeIndeed() {
 
             ".jobsearch-jobDescriptionText",
 
-            "[class*='jobDescription']"
+            ".jobsearch-JobComponent-description",
+
+            "[class*='jobDescription']",
+
+            "[class*='job-description']",
+
+            ".jobDescriptionText"
 
         ];
 
@@ -428,15 +444,29 @@ function scrapeIndeed() {
 
         }
 
+        // Fallback: grab all main content text
+        const mainContent = document.querySelector("[role='main']") || document.querySelector("main");
+        if (mainContent?.innerText?.trim()) {
+            return mainContent.innerText.trim().substring(0, 15000);
+        }
+
         return "";
 
     };
 
     const title = getText([
 
+        "[data-testid='jobsearch-JobInfoHeader-title']",
+
+        ".jobsearch-JobInfoHeader-title",
+
         "h1",
 
-        "[data-testid='jobsearch-JobInfoHeader-title']"
+        "h2.jobTitle",
+
+        ".job-title",
+
+        "[class*='JobInfoHeader'] h1"
 
     ]);
 
@@ -444,7 +474,15 @@ function scrapeIndeed() {
 
         "[data-testid='inlineHeader-companyName']",
 
-        ".jobsearch-InlineCompanyRating div:first-child"
+        "[data-testid='company-name']",
+
+        ".jobsearch-InlineCompanyRating div:first-child",
+
+        ".jobsearch-InlineCompanyRating a",
+
+        "[class*='companyName']",
+
+        "[class*='company-name']"
 
     ]);
 
@@ -452,7 +490,13 @@ function scrapeIndeed() {
 
         "[data-testid='job-location']",
 
-        ".jobsearch-JobInfoHeader-subtitle div:last-child"
+        "[data-testid='inlineHeader-companyLocation']",
+
+        ".jobsearch-JobInfoHeader-subtitle div:last-child",
+
+        "[class*='companyLocation']",
+
+        "[class*='job-location']"
 
     ]);
 
@@ -462,7 +506,9 @@ function scrapeIndeed() {
 
         "[data-testid='attribute_snippet_testid']",
 
-        "[class*='salary']"
+        "[class*='salary']",
+
+        ".jobsearch-JobMetadataHeader-item"
 
     ]);
 
@@ -470,15 +516,24 @@ function scrapeIndeed() {
 
         "[data-testid='jobsearch-JobDescriptionSection-sectionItem']",
 
-        "[class*='jobType']"
+        "[class*='jobType']",
+
+        "[class*='JobType']"
 
     ]);
 
     const description = getDescription();
 
+    // Extract skills from job details section
+    const skills = [];
+    document.querySelectorAll("[class*='skill'], [class*='Skill'], [class*='tag'], [class*='chip']").forEach(el => {
+        const val = el.innerText?.trim();
+        if (val && val.length < 50) skills.push(val);
+    });
+
     return {
 
-        title,
+        title: title || document.title?.split(' - ')?.[0] || "",
 
         company,
 
@@ -494,7 +549,7 @@ function scrapeIndeed() {
 
         salary,
 
-        skills: [],
+        skills,
 
         source: "Indeed"
 
@@ -775,23 +830,32 @@ function scrapeGlassdoor() {
 
     function normalizeJob(job = {}) {
 
+        // Safely convert any value to string, replacing NaN/undefined/null
+        const safe = (val) => {
+            if (val === null || val === undefined) return "";
+            const str = String(val);
+            return (str === "NaN" || str === "undefined" || str === "null") ? "" : str.trim();
+        };
+
         return {
 
-            title: job.title || "",
+            title: safe(job.title),
 
-            company: job.company || "",
+            company: safe(job.company),
 
-            location: job.location || "",
+            location: safe(job.location),
 
-            description: job.description || "",
+            description: safe(job.description),
 
-            employmentType: job.employmentType || "",
+            employmentType: safe(job.employmentType),
 
-            experience: job.experience || "",
+            experience: safe(job.experience),
 
-            salary: job.salary || "",
+            salary: safe(job.salary),
 
-            skills: job.skills || [],
+            workplaceType: safe(job.workplaceType),
+
+            skills: Array.isArray(job.skills) ? job.skills.filter(Boolean).map(s => safe(s)) : [],
 
             source: window.location.hostname,
 
@@ -805,6 +869,7 @@ function scrapeGlassdoor() {
 
 
 
+(() => {
 console.log(
     "Current Axyres Page:",
     window.location.href
@@ -947,3 +1012,5 @@ setInterval(()=>{
 
 
 },1000);
+
+})();
