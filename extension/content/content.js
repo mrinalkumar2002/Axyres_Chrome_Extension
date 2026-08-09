@@ -108,13 +108,14 @@ button.style.boxShadow =
 
 (function(){
 
-    console.log(
-        "Axyres Content Loaded"
-    );
+    console.log("Axyres Content Loaded");
 
+    const url = window.location.href;
+    const isJobSite = /linkedin\.com|indeed\.|naukri\.com|foundit\.in|monster\.|glassdoor\.|greenhouse\.io|lever\.co|workdayjobs\.|smartrecruiters\.com/i.test(url);
 
-    createAxyresButton();
-
+    if (isJobSite) {
+        createAxyresButton();
+    }
 
 })();
 

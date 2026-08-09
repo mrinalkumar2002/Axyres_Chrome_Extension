@@ -12,7 +12,7 @@ export function buildTemplate1(data) {
         
         <!-- HEADER SECTION -->
         <header class="classic-header">
-          <h1 class="name">${data.personalInfo?.name || (data.personalInfo?.firstName ? (data.personalInfo.firstName + " " + (data.personalInfo.lastName || "")).trim() : "") || "YOUR NAME"}</h1>
+          <h1 class="name">${(data.personalInfo?.firstName ? (data.personalInfo.firstName + " " + (data.personalInfo.lastName || "")).trim() : "") || data.personalInfo?.name || "YOUR NAME"}</h1>
           <p class="title">${data.personalInfo?.title || ""}</p>
           <div class="contact-info">
             ${data.personalInfo?.phone ? `<span class="contact-item">• ${data.personalInfo.phone}</span>` : ""}
@@ -23,10 +23,10 @@ export function buildTemplate1(data) {
         </header>
 
         <!-- SUMMARY SECTION -->
-        ${data.personalInfo?.summary ? `
+        ${(data.summary || data.personalInfo?.summary) ? `
           <section class="classic-section print-avoid-break">
             <h2 class="section-title">Summary</h2>
-            <p class="summary-text">${data.personalInfo.summary}</p>
+            <p class="summary-text">${data.summary || data.personalInfo.summary}</p>
           </section>
         ` : ""}
 
@@ -56,9 +56,9 @@ export function buildTemplate1(data) {
         ${hasSkills ? `
           <section class="classic-section print-avoid-break">
             <h2 class="section-title">Skills</h2>
-            <div class="skills-comma-list">
-              ${(data.technicalSkills || data.skills || []).filter(skill => skill && skill.trim()).flatMap(skill => skill.split(',')).map((s, idx, arr) => `
-                <span class="skill-text-item">${s.trim()}${idx < arr.length - 1 ? ', ' : ''}</span>
+            <div class="skills-pill-box" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px;">
+              ${(data.technicalSkills || data.skills || []).filter(skill => skill && skill.trim()).flatMap(skill => skill.split(',')).map(s => `
+                <span class="skill-badge-tag" style="padding: 4px 10px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 0.85rem; background: #fff;">${s.trim()}</span>
               `).join("")}
             </div>
           </section>
@@ -117,9 +117,9 @@ export function buildTemplate1(data) {
         ${hasLanguages ? `
           <section class="classic-section print-avoid-break">
             <h2 class="section-title">Languages</h2>
-            <div class="skills-comma-list">
-              ${data.languages.filter(lang => lang && lang.trim()).map((lang, idx, arr) => `
-                <span class="skill-text-item">${lang}${idx < arr.length - 1 ? ', ' : ''}</span>
+            <div class="skills-pill-box" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px;">
+              ${data.languages.filter(lang => lang && lang.trim()).map(lang => `
+                <span class="skill-badge-tag" style="padding: 4px 10px; border: 1px solid #e2e8f0; border-radius: 4px; font-size: 0.85rem; background: #fff;">${lang.trim()}</span>
               `).join("")}
             </div>
           </section>
@@ -130,7 +130,7 @@ export function buildTemplate1(data) {
 }
 
 export function buildTemplate2(data) {
-  const getFullName = () => data.personalInfo?.name || (data.personalInfo?.firstName ? (data.personalInfo.firstName + " " + (data.personalInfo.lastName || "")).trim() : "") || "John Doe";
+  const getFullName = () => (data.personalInfo?.firstName ? (data.personalInfo.firstName + " " + (data.personalInfo.lastName || "")).trim() : "") || data.personalInfo?.name || "John Doe";
   const hasSkills = (data.technicalSkills || data.skills || [])?.some(skill => skill && skill.trim());
   const hasLanguages = data.languages?.some(lang => lang && lang.trim());
   const hasExperience = (data.workExperience || data.experience || [])?.length > 0;
@@ -277,7 +277,7 @@ export function buildTemplate3(data) {
         
         <!-- HEADER SECTION -->
         <header class="timeline-header">
-          <h1 class="name">${data.personalInfo?.name || (data.personalInfo?.firstName ? (data.personalInfo.firstName + " " + (data.personalInfo.lastName || "")).trim() : "") || "YOUR NAME"}</h1>
+          <h1 class="name">${(data.personalInfo?.firstName ? (data.personalInfo.firstName + " " + (data.personalInfo.lastName || "")).trim() : "") || data.personalInfo?.name || "YOUR NAME"}</h1>
           <p class="title">${data.personalInfo?.title || ""}</p>
           
           <div class="contact-info">
@@ -403,7 +403,7 @@ export function buildTemplate3(data) {
 }
 
 export function buildTemplate4(data) {
-  const getFullName = () => data.personalInfo?.name || (data.personalInfo?.firstName ? (data.personalInfo.firstName + " " + (data.personalInfo.lastName || "")).trim() : "") || "John Doe";
+  const getFullName = () => (data.personalInfo?.firstName ? (data.personalInfo.firstName + " " + (data.personalInfo.lastName || "")).trim() : "") || data.personalInfo?.name || "John Doe";
   const hasSkills = (data.technicalSkills || data.skills || [])?.some(skill => skill && skill.trim());
   const hasLanguages = data.languages?.some(lang => lang && lang.trim());
   const hasExperience = (data.workExperience || data.experience || [])?.length > 0;

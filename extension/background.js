@@ -70,7 +70,7 @@ chrome.runtime.onMessage.addListener(
 
             chrome.sidePanel.open({
 
-                tabId: sender.tab.id
+                windowId: sender.tab.windowId
 
             });
 

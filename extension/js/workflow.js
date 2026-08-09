@@ -110,6 +110,12 @@ const result = await JobScraper.scrape();
             );
 
             // -----------------------------
+            // Clear previous tailored resume cache
+            // -----------------------------
+            await chrome.storage.local.remove("tailoredResume");
+            currentTailoredResume = null;
+
+            // -----------------------------
             // Show Result
             // -----------------------------
 
@@ -263,48 +269,44 @@ async function processResume(action) {
         // Phase 4: AI Tailoring
         let tailorResponseData = null;
 
-        if (currentTailoredResume) {
-            tailorResponseData = currentTailoredResume;
+        UI.showLoader("Tailoring resume with AI...");
+
+        const tailorResponse = await ExtensionApi.tailor({
+            resume: currentResume,
+            job: {
+                title: currentJob.title,
+                company: currentJob.company,
+                skills: currentJob.skills,
+                description: currentJob.description.substring(0, 3000)
+            }
+        });
+
+        if (!tailorResponse.success) {
+            UI.showNotification("Resume tailoring failed.", "error");
+            return;
+        }
+
+        Logger.info("Tailored Resume Received", tailorResponse.data);
+        tailorResponseData = tailorResponse.data.data;
+        currentTailoredResume = tailorResponseData;
+        
+        // Fix: Ensure the tailored resume preserves the selected template
+        currentTailoredResume.templateId = currentResume.templateId || 1;
+
+        await chrome.storage.local.set({
+            tailoredResume: currentTailoredResume
+        });
+
+        // Sync tailored resume to backend database
+        const saveResponse = await ExtensionApi.saveLatest({
+            templateId: currentResume.templateId || 1,
+            resumeData: tailorResponseData
+        });
+
+        if (!saveResponse.success) {
+            Logger.warn("Failed to sync tailored resume to backend DB", saveResponse);
         } else {
-            UI.showLoader("Tailoring resume with AI...");
-
-            const tailorResponse = await ExtensionApi.tailor({
-                resume: currentResume,
-                job: {
-                    title: currentJob.title,
-                    company: currentJob.company,
-                    skills: currentJob.skills,
-                    description: currentJob.description.substring(0, 3000)
-                }
-            });
-
-            if (!tailorResponse.success) {
-                UI.showNotification("Resume tailoring failed.", "error");
-                return;
-            }
-
-            Logger.info("Tailored Resume Received", tailorResponse.data);
-            tailorResponseData = tailorResponse.data.data;
-            currentTailoredResume = tailorResponseData;
-            
-            // Fix: Ensure the tailored resume preserves the selected template
-            currentTailoredResume.templateId = currentResume.templateId || 1;
-
-            await chrome.storage.local.set({
-                tailoredResume: currentTailoredResume
-            });
-
-            // Sync tailored resume to backend database
-            const saveResponse = await ExtensionApi.saveLatest({
-                templateId: currentResume.templateId || 1,
-                resumeData: tailorResponseData
-            });
-
-            if (!saveResponse.success) {
-                Logger.warn("Failed to sync tailored resume to backend DB", saveResponse);
-            } else {
-                Logger.info("Tailored resume synced to DB successfully");
-            }
+            Logger.info("Tailored resume synced to DB successfully");
         }
 
         if (action === "review") {
